@@ -1,0 +1,6 @@
+label: dos
+device: /dev/sda
+unit: sectors
+sector-size: 512
+
+/dev/sda1 : start=        2048, size=     2855626, type=83, bootable
