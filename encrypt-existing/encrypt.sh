@@ -34,6 +34,7 @@ sudo rsync -av backup/ /mnt
 sudo cp /mnt/etc/fstab /mnt/etc/fstab.bak
 
 echo "vm-enc UUID=$(sudo cryptsetup luksUUID /dev/mapper/${LOOP_DEVICE}p1) none luks,discard,initramfs" | sudo tee /mnt/etc/crypttab
+sudo chmod 0600 /mnt/etc/crypttab
 echo "/dev/mapper/vm-enc      /               ext4            rw,relatime     0 1" | sudo tee /mnt/etc/fstab
 
 
