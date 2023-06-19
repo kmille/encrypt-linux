@@ -4,10 +4,10 @@ set -euo pipefail
 if ! sudo losetup | grep -q $(pwd)/disk-encrypted.img
 then
     sudo kpartx -a disk-encrypted.img
-    LOOP_DEVICE=$(sudo losetup | grep $(pwd)/disk-encrypted.img | awk '{ print $1 }' | awk -F/ '{ print $3 }')
     sudo losetup
 fi
 
+LOOP_DEVICE=$(sudo losetup | grep $(pwd)/disk-encrypted.img | awk '{ print $1 }' | awk -F/ '{ print $3 }')
 if ! sudo dmsetup ls | grep -q vm-enc
 then
     export PASSWORD=test
