@@ -1,0 +1,69 @@
+
+# TODO
+- initramfs unlock
+- keyfile
+- bugs: erst timezone ding fixen .... non-interactive
+- bug: kann qemuo nicht ausm skript starten?
+- docs:
+    - arch chroot beschreiben
+    - link: crpyto geknackt / type v1/v2
+- efi boot?
+
+# Links
+- https://gitlab.com/BrightOpen/nuxnap
+
+
+# Remove loop device
+sudo dmsetup remove /dev/mapper/loop0p1
+losetup -d /dev/loop0
+
+## resize disk
+sudo kpartx -a disk-encrypted.img
+sudo fdisk -l /dev/loop0
+sudo growpart /dev/loop0 1
+sudo cryptsetup resize /dev/mapper/loop0p1sudo cryptsetup --verbose luksOpen /dev/mapper/loop0p2 vm-en
+sudo cryptsetup --verbose luksOpen /dev/mapper/loop0p2 vm-enc
+sudo e2fsck -f /dev/mapper/vm-enc
+sudo resize2fs /dev/mapper/vm-enc
+sudo cryptsetup luksClose --verbose vm-enc
+sudo kpartx -d disk-encrypted.img
+
+## rename crypt device
+dmsetup rename OLD_NAME NEW_NAME
+cp -a /dev/mapper/NEW_NAME /dev/mapper/OLD_NAME
+update-initramfs -u -k all
+rm /dev/mapper/OLD_NAME
+update-grub
+
+
+# Enable swap file
+./chroot.sh
+sudo fallocate -l 1G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
+./unchroot.sh
+
+sudo swapon --show
+
+# initramfs unlock
+./chroot.sh
+apt-get install -y ssh dropbear-initramfs
+vim /etc/dropbear/initramfs/authorized_keys # add ssh key (rsa!)
+chmod 600 /etc/dropbear/initramfs/authorized_keys
+echo 'DROPBEAR_OPTIONS="-I 30 -j -k -p 22 -s -c cryptroot-unlock"' >> /etc/dropbear/initramfs/dropbear.conf
+update-initramfs -u
+./unchroot.sh
+
+macht DHCP, bei statischer ip:
+IP=192.168.1.254::192.168.1.1:255.255.255.0::eth0:off
+
+
+ssh root@localhost -p 2222 -i ~/.ssh/key
+
+ -net nic,model=rtl8139 \
+ -net user,hostfwd=tcp:127.0.0.1:2222-:22 \
+
+https://tqdev.com/2022-luks-with-ssh-unlock
+https://www.cyberciti.biz/security/how-to-unlock-luks-using-dropbear-ssh-keys-remotely-in-linux/
+
