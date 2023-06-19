@@ -1,13 +1,12 @@
 
 # TODO
-- initramfs unlock
-- keyfile
 - bugs: erst timezone ding fixen .... non-interactive
-- bug: kann qemuo nicht ausm skript starten?
 - docs:
     - arch chroot beschreiben
     - link: crpyto geknackt / type v1/v2
 - efi boot?
+- remove discard
+- rename: enc-vm
 
 # Links
 - https://gitlab.com/BrightOpen/nuxnap
@@ -34,7 +33,6 @@ cp -a /dev/mapper/NEW_NAME /dev/mapper/OLD_NAME
 update-initramfs -u -k all
 rm /dev/mapper/OLD_NAME
 update-grub
-
 
 # Enable swap file
 ./chroot.sh

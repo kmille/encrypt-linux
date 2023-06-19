@@ -29,9 +29,16 @@ sudo mount /dev/mapper/vm-enc /mnt
 
 sudo debootstrap --cache-dir="$CACHE_DIR" bookworm /mnt http://deb.debian.org/debian
 
-echo "vm-enc UUID=$(sudo cryptsetup luksUUID /dev/mapper/${LOOP_DEVICE}p1) none luks,discard,initramfs" | sudo tee /mnt/etc/crypttab
+sudo dd bs=512 count=4 if=/dev/random of=/mnt/luks_keyfile iflag=fullblock
+sudo chmod 600 /mnt/luks_keyfile
+echo $PASSWORD | sudo cryptsetup --verbose luksAddKey "/dev/mapper/${LOOP_DEVICE}p1" /mnt/luks_keyfile
+
+echo "vm-enc UUID=$(sudo cryptsetup luksUUID /dev/mapper/${LOOP_DEVICE}p1) /luks_keyfile luks,discard,initramfs,key-slot=1" | sudo tee /mnt/etc/crypttab
 sudo chmod 0600 /mnt/etc/crypttab
+
+
 echo "/dev/mapper/vm-enc      /               ext4            rw,relatime     0 1" | sudo tee /mnt/etc/fstab
+
 
 cat <<EOF | sudo arch-chroot /mnt
     echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
@@ -44,6 +51,10 @@ cat <<EOF | sudo arch-chroot /mnt
     sed -i -e "s/# $LANG/$LANG/" /etc/locale.gen
     locale-gen $LANG
     update-locale LANG=$LANG
+
+    echo 'KEYFILE_PATTERN="/luks_keyfile"' >> /etc/cryptsetup-initramfs/conf-hook
+    # you can test it later with: lsinitramfs /boot/initrd* | grep "^cryptroot/keyfiles/"   # but the file will be renamed (file and entry in crypttab)
+    echo UMASK=0077 >> /etc/initramfs-tools/initramfs.conf
 
     echo "GRUB_ENABLE_CRYPTODISK=y" >> "/etc/default/grub"
     update-initramfs -u
